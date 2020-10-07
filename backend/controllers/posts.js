@@ -1,4 +1,3 @@
-const Sauce = require('../models/Sauce');
 const fs = require('fs');
 
 //Fonction d'envoi au front de toutes les sauces (requête GET)

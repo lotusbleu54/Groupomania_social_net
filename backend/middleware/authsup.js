@@ -1,5 +1,3 @@
-const User = require('../models/User');
-const Sauce = require('../models/Sauce');
 const jwt = require('jsonwebtoken');
 
 //Token caché

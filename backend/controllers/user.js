@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const db = require('../db');
 const passwordRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!\?@\.#\$%\^&\*])(?=.{8,})");
 // Mot de passe fort avec au moins 8 caractères dont au moins 1 minuscule, 1 majuscule, 1 chiffre, et 1 caractère spécial
 
@@ -15,7 +15,7 @@ exports.apiLimiter = rateLimit({
 
 exports.createAccountLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // Fenêtre d'1 heure
-    max: 2, // 2 comptes créés max depuis cette IP
+    max: 10, // 2 comptes créés max depuis cette IP
     message:
       "Trop de tentatives de créations de compte depuis cette IP, veuillez réessayer ultérieurement"
   });
@@ -24,13 +24,14 @@ exports.signup = (req, res, next) => {
     if (passwordRegex.test(req.body.password)) { //Si la sécurité du mot de passe correspond au critère demandé
       bcrypt.hash(req.body.password, 10) //Algoryhtme de hashage du mot de passe
       .then((hash) => {
-        const user = new User({
-          email: req.body.email,
-          password: hash //Le hash est sauvegardé dans la base et non le mot de passe en clair
-        });
-        user.save()
-          .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-          .catch(error => res.status(400).json({ error }));
+        //Le hash est sauvegardé dans la base et non le mot de passe en clair
+        let myQuery = "INSERT INTO User VALUES (NULL,'" + req.body.email + "','" + hash + "')";
+        console.log(myQuery);
+        db.query(myQuery, function (err, result) {
+              if (err) throw err;
+              console.log(result);
+              res.status(201).json({ message: 'Utilisateur créé !' })
+          });
       })
       .catch(error => res.status(500).json({ error }));
     }
@@ -39,6 +40,7 @@ exports.signup = (req, res, next) => {
     }
 }
 
+/*
 exports.login = (req, res, next) => {
     User.findOne({ email: req.body.email })
       .then(user => {
@@ -57,10 +59,13 @@ exports.login = (req, res, next) => {
       })
       .catch(error => res.status(500).json({ error }));
 };
-
+*/
 //Permet d'effacer un user de la base au besoin
+/*
 exports.deleteUser = (req, res, next) => {
     User.deleteOne({ _id: req.params.id })
           .then(() => res.status(200).json({ message: 'Utilisateur supprimé !'}))
           .catch(error => res.status(400).json({ error }));
       };
+
+      */
