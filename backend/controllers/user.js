@@ -6,31 +6,34 @@ const passwordRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!\?@\.
 
 //Limiter la création de trop de comptes et trop de tentatives de connection
 const rateLimit = require("express-rate-limit");
+const { json } = require('body-parser');
 
 exports.apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // Fenêtre de 5 minutes
-    max: 3, //3 tentatives de connections max depuis cette IP
-    message: "Trop de tentatives de connection depuis cette IP, veuillez réessayer ultérieurement"
+    max: 10, //3 tentatives de connections max depuis cette IP
+    message: {error: "Trop de tentatives de connection depuis cette IP, veuillez réessayer ultérieurement"}
   });
 
 exports.createAccountLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // Fenêtre d'1 heure
-    max: 10, // 2 comptes créés max depuis cette IP
-    message:
-      "Trop de tentatives de créations de compte depuis cette IP, veuillez réessayer ultérieurement"
+    max: 20, // 2 comptes créés max depuis cette IP
+    message: {error : "Trop de tentatives de créations de compte depuis cette IP, veuillez réessayer ultérieurement"}
   });
 
 exports.signup = (req, res, next) => {
     if (passwordRegex.test(req.body.password)) { //Si la sécurité du mot de passe correspond au critère demandé
-      bcrypt.hash(req.body.password, 10) //Algoryhtme de hashage du mot de passe
+      bcrypt.hash(req.body.password, 10) //Algorythme de hashage du mot de passe
       .then((hash) => {
         //Le hash est sauvegardé dans la base et non le mot de passe en clair
-        let myQuery = "INSERT INTO User VALUES (NULL,'" + req.body.email + "','" + hash + "')";
-        console.log(myQuery);
-        db.query(myQuery, function (err, result) {
-              if (err) throw err;
-              console.log(result);
-              res.status(201).json({ message: 'Utilisateur créé !' })
+        let signupQuery = "INSERT INTO User VALUES (NULL,'" + req.body.email + "','" + hash + "')";
+        db.query(signupQuery, function (err, result) {
+          if (!err) {
+            res.status(201).json({ message: 'Utilisateur créé !' })
+          }
+          else if (err.code==='ER_DUP_ENTRY') {
+            res.status(401).json({ error: "L'utilisateur existe déjà !" })
+          }
+          else throw err;     
           });
       })
       .catch(error => res.status(500).json({ error }));
@@ -40,8 +43,30 @@ exports.signup = (req, res, next) => {
     }
 }
 
-/*
 exports.login = (req, res, next) => {
+  let loginQuery = "SELECT * FROM User where email = '" + req.body.email + "'";
+  console.log(req.body);
+  db.query(loginQuery, function (err, result) {
+    if (err) throw err;
+    else {
+      if(result.length > 0) {
+        console.log(result[0].mdp);
+        bcrypt.compare(req.body.password, result[0].mdp)
+        .then((valid) => {
+          if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
+          else {res.status(200).json({ //Retourne le User Id et le Token
+              userId: result[0].id,
+              token: jwt.sign({ userId: result[0].id },process.env.TOKEN,{ expiresIn: '24h' })
+          });}
+        })
+        .catch(error => res.status(500).json({ error }));
+      }
+      else {res.status(401).json({ error: 'Utilisateur non trouvé !' });}
+    }
+});
+}
+
+/*
     User.findOne({ email: req.body.email })
       .then(user => {
         if (!user) { //Cas où il n'y a pas d'utilisateur enregistré avec cette adresse e-mail
@@ -60,12 +85,12 @@ exports.login = (req, res, next) => {
       .catch(error => res.status(500).json({ error }));
 };
 */
-//Permet d'effacer un user de la base au besoin
-/*
-exports.deleteUser = (req, res, next) => {
-    User.deleteOne({ _id: req.params.id })
-          .then(() => res.status(200).json({ message: 'Utilisateur supprimé !'}))
-          .catch(error => res.status(400).json({ error }));
-      };
 
-      */
+//Permet d'effacer un user de la base
+exports.deleteUser = (req, res, next) => {
+  let deleteQuery = "DELETE FROM User where id = " + req.params.id;
+  db.query(deleteQuery, function (err, result) {
+    if (err) {res.status(400).json({ error : err.code });}
+    else {res.status(200).json({ message: 'Utilisateur supprimé !'});}
+  })
+}
