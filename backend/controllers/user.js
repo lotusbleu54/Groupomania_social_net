@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const fs = require('fs');
 const passwordRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!\?@\.#\$%\^&\*])(?=.{8,})");
 // Mot de passe fort avec au moins 8 caractères dont au moins 1 minuscule, 1 majuscule, 1 chiffre, et 1 caractère spécial
 
@@ -21,17 +22,19 @@ exports.createAccountLimiter = rateLimit({
   });
 
 exports.signup = (req, res, next) => {
-    if (passwordRegex.test(req.body.password)) { //Si la sécurité du mot de passe correspond au critère demandé
-      bcrypt.hash(req.body.password, 10) //Algorythme de hashage du mot de passe
+    const userObject = JSON.parse(req.body.user);
+    const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
+    if (passwordRegex.test(userObject.password)) { //Si la sécurité du mot de passe correspond au critère demandé
+      bcrypt.hash(userObject.password, 10) //Algorythme de hashage du mot de passe
       .then((hash) => {
         //Le hash est sauvegardé dans la base et non le mot de passe en clair
-        let signupQuery = "INSERT INTO User VALUES (NULL,'" + req.body.email + "','" + hash + "')";
+        let signupQuery = "INSERT INTO User2 VALUES (NULL,'" + userObject.email + "','" + hash + "','" + userObject.pseudo + "','"+imageUrl+"')";
         db.query(signupQuery, function (err, result) {
           if (!err) {
             res.status(201).json({ message: 'Utilisateur créé !' })
           }
           else if (err.code==='ER_DUP_ENTRY') {
-            res.status(401).json({ error: "L'utilisateur existe déjà !" })
+            res.status(401).json({ error: "L'utilisateur ou le pseudo existe déjà !" })
           }
           else throw err;     
           });
@@ -39,18 +42,17 @@ exports.signup = (req, res, next) => {
       .catch(error => res.status(500).json({ error }));
     }
     else {
-      res.status(400).json({error: 'Mot de passe doit inclure au moins 8 caractères dont au moins 1 minuscule, 1 majuscule, 1 chiffre, et 1 caractère spécial'});
+      res.status(400).json({error: "Le mot de passe n'est pas assez sécurisé"});
     }
 }
 
 exports.login = (req, res, next) => {
-  let loginQuery = "SELECT * FROM User where email = '" + req.body.email + "'";
-  console.log(req.body);
+  let loginQuery = "SELECT * FROM User2 where email = '" + req.body.email + "'";
+  console.log(loginQuery);
   db.query(loginQuery, function (err, result) {
     if (err) throw err;
     else {
       if(result.length > 0) {
-        console.log(result[0].mdp);
         bcrypt.compare(req.body.password, result[0].mdp)
         .then((valid) => {
           if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
