@@ -48,13 +48,13 @@ export default {
   },
 
   computed: {
-    ...mapState(['pseudo', 'token'])
+    ...mapState(['id','pseudo', 'token'])
   },
 
   methods: {
 
     disconnection() {
-      this.$store.commit('CONNECT_USER', ["",""]);
+      this.$store.commit('CONNECT_USER', ["","",""]);
       this.$router.push({ name: 'login' });
     },
 
@@ -162,7 +162,7 @@ export default {
           if (res.status == 201) {
             this.success=true;
             this.waiting=false;
-            this.$router.push({ name: 'Posts' });
+            this.$router.push({ name: 'posts' });
           }
           else {res.json ()
           .then (json => {

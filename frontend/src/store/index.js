@@ -5,13 +5,15 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    id:"",
     pseudo: "",
     token: "",
   },
   mutations: {
     CONNECT_USER(state, payload) {
-      state.pseudo = payload[0];
-      state.token = payload[1];
+      state.id = payload[0];
+      state.pseudo = payload[1];
+      state.token = payload[2];
     }
   },
   actions: {

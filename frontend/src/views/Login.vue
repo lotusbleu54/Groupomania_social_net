@@ -61,7 +61,7 @@ export default {
             .then (json => {
               this.success=true;
               this.waiting=false;
-              this.$store.commit('CONNECT_USER', [json.pseudo, json.token]);
+              this.$store.commit('CONNECT_USER', [json.id, json.pseudo, json.token]);
               this.$router.push({ name: 'posts' });
             }
           )}
@@ -84,26 +84,6 @@ export default {
 </script>
 
 <style lang="scss">
-
-.loader {
-  border: 10px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 10px solid #FD2A00;
-  width: 50px;
-  height: 50px;
-  margin:auto;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-#erreur {
-  color:red;
-  font-weight: bold;
-}
 
 #formElement {
   margin: 20px auto;

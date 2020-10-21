@@ -27,7 +27,7 @@ exports.createPost = (req, res, next) => {
 
 //Fonction d'envoi au front de toutes les sauces (requête GET)
 exports.getAllPosts = (req, res, next) => {
-  let getAllQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.date FROM posts INNER JOIN user2 ON posts.user_id = user2.id ORDER BY `date` DESC";
+  let getAllQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.numero, TIMEDIFF(NOW(),Posts.date) as date FROM posts INNER JOIN user2 ON posts.user_id = user2.id ORDER BY `date` ASC";
   db.query(getAllQuery, function (err, result) {
     if (err) throw err;
     else {
@@ -35,10 +35,11 @@ exports.getAllPosts = (req, res, next) => {
         const Posts = [];
         for (let i = 0; i < result.length; i++) {
           Posts.push({
-            Pseudo: result[i].pseudo,
-            Avatar: result[i].avatar_url,
+            pseudo: result[i].pseudo,
+            avatar: result[i].avatar_url,
             title: result[i].title,
             mediaUrl: result[i].media_url,
+            numero: result[i].numero,
             date: result[i].date
           })
         }
@@ -50,10 +51,26 @@ exports.getAllPosts = (req, res, next) => {
 }
 
 //Fonction d'envoi au front de l'objet sauce demandé (requête GET)
-exports.getOneSauce = (req, res, next) => {
-  Sauce.findOne({_id: req.params.id})
-  .then((sauce) => {res.status(200).json(sauce);})
-  .catch((error) => {res.status(404).json({error});});
+exports.getOnePost = (req, res, next) => {
+  let getOneQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.numero, posts.link, posts.description, TIMEDIFF(NOW(),Posts.date) as date FROM posts INNER JOIN user2 ON posts.user_id = user2.id WHERE posts.numero = "+req.params.id;
+  db.query(getOneQuery, function (err, result) {
+    if (err) throw err;
+    else {
+      if(result.length > 0) {
+        res.status(200).json({
+            pseudo: result[0].pseudo,
+            avatar: result[0].avatar_url,
+            title: result[0].title,
+            description: result[0].description,
+            link:result[0].link,
+            mediaUrl: result[0].media_url,
+            numero: result[0].numero,
+            date: result[0].date
+          })
+        }
+      else {res.status(401).json({ error: 'Pas de post trouvé !' });}
+    }
+  })
 }
 
 //Fonction de modification de l'objet sauce (requête PUT)

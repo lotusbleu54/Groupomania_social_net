@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../views/Login.vue'
 import Posts from '../views/Posts.vue'
+import Post from '../views/Post.vue'
 import AddPost from '../views/AddPost.vue'
 
 Vue.use(VueRouter)
@@ -21,6 +22,11 @@ const routes = [
     path: '/posts',
     name: 'posts',
     component: Posts
+  },
+  {
+    path: '/post/:numero',
+    name: 'post',
+    component: Post
   },
   {
     path: '/addpost',
