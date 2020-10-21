@@ -13,5 +13,5 @@ module.exports = (req, res, next) => {
     } 
     else {next();} //Si identification correcte, on autorise l'exécution du script suivant
   } 
-  catch {res.status(401).json({error: new Error('Invalid request!')})}
+  catch {res.status(401).json({error: 'Requête non authorisée, veuillez vous reconnecter'})}
 }

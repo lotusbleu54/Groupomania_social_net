@@ -23,7 +23,7 @@ exports.createAccountLimiter = rateLimit({
 
 exports.signup = (req, res, next) => {
     const userObject = JSON.parse(req.body.user);
-    const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
+    const imageUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
     if (passwordRegex.test(userObject.password)) { //Si la sécurité du mot de passe correspond au critère demandé
       bcrypt.hash(userObject.password, 10) //Algorythme de hashage du mot de passe
       .then((hash) => {
@@ -48,7 +48,6 @@ exports.signup = (req, res, next) => {
 
 exports.login = (req, res, next) => {
   let loginQuery = "SELECT * FROM User2 where email = '" + req.body.email + "'";
-  console.log(loginQuery);
   db.query(loginQuery, function (err, result) {
     if (err) throw err;
     else {
@@ -57,7 +56,7 @@ exports.login = (req, res, next) => {
         .then((valid) => {
           if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
           else {res.status(200).json({ //Retourne le User Id et le Token
-              userId: result[0].id,
+              pseudo: result[0].pseudo,
               token: jwt.sign({ userId: result[0].id },process.env.TOKEN,{ expiresIn: '24h' })
           });}
         })

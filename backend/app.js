@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 //Gestion de la ressource image de façon statique
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/medias', express.static(path.join(__dirname, 'medias')));
 
 //Routes de l'API
 app.use('/api/posts', postsRoutes);

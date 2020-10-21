@@ -6,16 +6,13 @@ const auth = require('../middleware/auth');
 //Import du middleware authsup pour n'autoriser que l'admin ou l'utilisateur qui a créé une sauce à la modifier ou supprimer
 const authsup = require('../middleware/authsup');
 //Import du middleware multer pour la gestion des images
-const multer = require('../middleware/multer-config');
-//Import des middlewares de validation des inputs
-const postInputValidation = require('../middleware/postInputValidation');
-const commentInputValidation = require('../middleware/commentInputValidation');
+const multerVideo = require('../middleware/multer-config-video');
 
 const postsCtrl = require('../controllers/posts');
 
+router.post('/', auth, multerVideo , postsCtrl.createPost);
+router.get('/', postsCtrl.getAllPosts);
 /*
-router.get('/', auth, postsCtrl.getAllPosts);
-router.post('/', auth, multer,  postInputValidation, postsCtrl.createPost);
 router.get('/:id', auth, postsCtrl.getOnePost);
 router.put('/:id', authsup, multer, postInputValidation, postsCtrl.modifyPost);
 router.delete('/:id', authsup, postsCtrl.deletePost);

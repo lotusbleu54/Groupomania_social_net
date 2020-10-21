@@ -57,10 +57,14 @@ export default {
       fetch("http://localhost:3000/api/auth/login", options)
         .then (res => {
           if (res.status == 200) {
-            this.success=true;
-            this.waiting=false;
-            this.$router.push({ name: 'posts' });
-          }
+            res.json ()
+            .then (json => {
+              this.success=true;
+              this.waiting=false;
+              this.$store.commit('CONNECT_USER', [json.pseudo, json.token]);
+              this.$router.push({ name: 'posts' });
+            }
+          )}
           else {res.json ()
           .then (json => {
             this.waiting=false;
@@ -72,7 +76,7 @@ export default {
         .catch (() => {
           this.waiting=false;
           this.success= false;
-          this.message = "Désolé, le serveur ne répond pas !";
+          this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
         })
       }
   }
@@ -80,23 +84,6 @@ export default {
 </script>
 
 <style lang="scss">
-header {
-  display: flex;
-  justify-content: space-between;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #381302;
-
-    &.router-link-exact-active {
-      color: #FD2A00;
-    }
-  }
-}
 
 .loader {
   border: 10px solid #f3f3f3;
@@ -125,14 +112,7 @@ header {
   padding: 5px;
   max-width: 300px;
 }
-label {
-  margin-top:5px;
-  font-size:20px;
-}
-input {
-  margin:10px;
-  height:24px;
-}
+
 #userLogin {
   margin:10px auto;
   height:auto;

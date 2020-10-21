@@ -20,7 +20,7 @@
       <label for="pseudo">Pseudo <span class="required">*</span> </label>
       <input @input = "checkForm" type="text" id="pseudo" name="pseudo" required>
       <label for="avatar" class="custom-file-upload"><i class="fa fa-upload" aria-hidden="true"></i> Télécharger un avatar <span class="required">*</span></label>
-      <input @input = "checkForm" @change = "loadImagePreview" type="file" id="avatar" name="avatar" required accept="image/png, image/jpeg, image/jpg">
+      <input @input = "checkForm" @change = "loadImagePreview" type="file" id="avatar" name="avatar" required accept="image/*">
       <div class="image-preview" v-if="imageLoaded===true">
         <img src="" alt="aperçu de l'avatar" class="image-preview__image"> 
       </div>
@@ -77,6 +77,12 @@ export default {
       const pseudo = document.getElementById("pseudo").value;
       const user = { "email": email, "password": password, "pseudo": pseudo };
       const fileToSend = event.target.avatar.files[0];
+      if (fileToSend.size > 1*1000*1000) {
+        this.waiting=false;
+        this.success = false;
+        this.message = "La taille maximale du fichier doit être de 1Mb";
+      }
+      else {
       let formData = new FormData();
       formData.append('user', JSON.stringify(user));
       formData.append('image', fileToSend);
@@ -104,32 +110,16 @@ export default {
         .catch (() => {
           this.waiting=false;
           this.success= false;
-          this.message = "Désolé, le serveur ne répond pas !";
+          this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
         })
-      }
+    }
+    }
   }
 }
 
 </script>
 
 <style lang="scss">
-header {
-  display: flex;
-  justify-content: space-between;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #381302;
-
-    &.router-link-exact-active {
-      color: #FD2A00;
-    }
-  }
-}
 
 form > p {
   font-size:14px;

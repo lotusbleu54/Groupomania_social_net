@@ -1,10 +1,52 @@
 const fs = require('fs');
+const db = require('../db');
+
+//Fonction d'ajout d'un nouveau post (requête POST)
+exports.createPost = (req, res, next) => {
+  if (req.file) {
+    const postObject = JSON.parse(req.body.post);
+    const mediaUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
+    const postQuery = "INSERT INTO Posts VALUES (NULL,'" + postObject.userId + "','" + postObject.title + "','" + postObject.description + "','" + postObject.url + "','"+ mediaUrl + "', NOW())";
+    db.query(postQuery, function (err, result) {
+      if (!err) {
+        res.status(201).json({ message: 'Post créé !' })
+      }
+      else throw err;     
+      });
+  }
+  else {
+    const postQuery = "INSERT INTO Posts VALUES (NULL,'" + req.body.userId + "','" + req.body.title + "','" + req.body.description + "','" + req.body.url + "', NULL, NOW())";
+    db.query(postQuery, function (err, result) {
+      if (!err) {
+        res.status(201).json({ message: 'Post créé !' })
+      }
+      else throw err;     
+      });
+  }
+}
 
 //Fonction d'envoi au front de toutes les sauces (requête GET)
-exports.getAllSauces = (req, res, next) => {
-  Sauce.find()
-  .then((sauces) => {res.status(200).json(sauces);})
-  .catch((error) => {res.status(400).json({error: error});})
+exports.getAllPosts = (req, res, next) => {
+  let getAllQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.date FROM posts INNER JOIN user2 ON posts.user_id = user2.id ORDER BY `date` DESC";
+  db.query(getAllQuery, function (err, result) {
+    if (err) throw err;
+    else {
+      if(result.length > 0) {
+        const Posts = [];
+        for (let i = 0; i < result.length; i++) {
+          Posts.push({
+            Pseudo: result[i].pseudo,
+            Avatar: result[i].avatar_url,
+            title: result[i].title,
+            mediaUrl: result[i].media_url,
+            date: result[i].date
+          })
+        }
+        res.status(200).json(Posts);
+      }
+      else {res.status(401).json({ error: 'Pas de post trouvé !' });}
+    }
+  })
 }
 
 //Fonction d'envoi au front de l'objet sauce demandé (requête GET)
@@ -12,22 +54,6 @@ exports.getOneSauce = (req, res, next) => {
   Sauce.findOne({_id: req.params.id})
   .then((sauce) => {res.status(200).json(sauce);})
   .catch((error) => {res.status(404).json({error});});
-}
-
-//Fonction d'ajout d'une nouvelle sauce (requête POST)
-exports.createSauce = (req, res, next) => {
-  const sauceObject = JSON.parse(req.body.sauce); //Récupération des données du formulaire de création des sauces
-  delete sauceObject._id; //On enlève de l'objet l'id créé automatiquement
-  const sauce = new Sauce({
-    ...sauceObject,
-    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`, //Création de l'url de l'image
-    likes:0, //Initialisation des likes et dislikes à 0
-    dislikes:0,
-    usersLiked: [],
-    usersDisliked: [] });
-  sauce.save() //Enregistrement dans la DB
-  .then(() => {res.status(201).json({message: 'Sauce enregistrée !'});})
-  .catch((error) => {res.status(400).json({error});});
 }
 
 //Fonction de modification de l'objet sauce (requête PUT)
