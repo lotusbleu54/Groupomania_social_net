@@ -28,7 +28,7 @@ exports.signup = (req, res, next) => {
       bcrypt.hash(userObject.password, 10) //Algorythme de hashage du mot de passe
       .then((hash) => {
         //Le hash est sauvegardé dans la base et non le mot de passe en clair
-        let signupQuery = "INSERT INTO User2 VALUES (NULL,'" + userObject.email + "','" + hash + "','" + userObject.pseudo + "','"+imageUrl+"')";
+        let signupQuery = "INSERT INTO users VALUES (NULL,'" + userObject.email + "','" + hash + "','" + userObject.pseudo + "','"+imageUrl+"')";
         db.query(signupQuery, function (err, result) {
           if (!err) {
             res.status(201).json({ message: 'Utilisateur créé !' })
@@ -47,12 +47,12 @@ exports.signup = (req, res, next) => {
 }
 
 exports.login = (req, res, next) => {
-  let loginQuery = "SELECT * FROM User2 where email = '" + req.body.email + "'";
+  let loginQuery = "SELECT * FROM users where email = '" + req.body.email + "'";
   db.query(loginQuery, function (err, result) {
     if (err) throw err;
     else {
       if(result.length > 0) {
-        bcrypt.compare(req.body.password, result[0].mdp)
+        bcrypt.compare(req.body.password, result[0].password)
         .then((valid) => {
           if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
           else {res.status(200).json({ //Retourne le User Id et le Token
@@ -68,31 +68,55 @@ exports.login = (req, res, next) => {
 });
 }
 
-/*
-    User.findOne({ email: req.body.email })
-      .then(user => {
-        if (!user) { //Cas où il n'y a pas d'utilisateur enregistré avec cette adresse e-mail
-          return res.status(401).json({ error: 'Utilisateur non trouvé !' });
-        }
-        bcrypt.compare(req.body.password, user.password) //Comparaison des hashs pour voir si le mot de passe est valide
-          .then((valid) => {
-            if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
-            else {res.status(200).json({ //Retourne le User Id et le Token
-                userId: user._id,
-                token: jwt.sign({ userId: user._id },process.env.TOKEN,{ expiresIn: '24h' })
-            });}
+exports.getUserInfo = (req, res, next) => {
+  let getUserInfoQuery = `SELECT email, avatar_url FROM users where id = ${req.params.id}`;
+  db.query(getUserInfoQuery, function (err, result) {
+    if (err) throw err;
+    else {
+      if(result.length > 0) {
+        res.status(200).json({
+            email: result[0].email,
+            avatarUrl: result[0].avatar_url,
           })
-          .catch(error => res.status(500).json({ error }));
+        }
+      else {res.status(401).json({ error: "L'utilisateur n'a pas été trouvé !" });}
+    }
+  })
+}
+
+//Permet de modifier l'avatar d'un user
+exports.modifyUser = (req, res, next) => {
+  const avatarUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
+  const infoAvatarQuery = "SELECT avatar_url FROM users where id = "+ req.params.id;
+  db.query(infoAvatarQuery, function (err, result) {
+    if (err) {res.status(400).json({ error : err.code });}
+    else {
+      const oldAvatarUrl = result[0].avatar_url.split('/medias/')[1];
+      const modifyAvatarQuery = "UPDATE users SET avatar_url = '"+avatarUrl+"' WHERE id = "+ req.params.id;
+      db.query(modifyAvatarQuery, function (err, result) {
+        if (err) {res.status(400).json({ error : err.code });}
+        else {
+          fs.unlink(`medias/${oldAvatarUrl}`, () => {res.status(200).json({ message: 'Avatar modifié !'});})
+        }
       })
-      .catch(error => res.status(500).json({ error }));
-};
-*/
+    }
+  })
+}
 
 //Permet d'effacer un user de la base
 exports.deleteUser = (req, res, next) => {
-  let deleteQuery = "DELETE FROM User where id = " + req.params.id;
-  db.query(deleteQuery, function (err, result) {
+  const deleteAvatarQuery = "SELECT avatar_url FROM users where id = "+ req.params.id;
+  db.query(deleteAvatarQuery, function (err, result) {
     if (err) {res.status(400).json({ error : err.code });}
-    else {res.status(200).json({ message: 'Utilisateur supprimé !'});}
+    else {
+      const filename = result[0].avatar_url.split('/medias/')[1];
+      fs.unlink(`medias/${filename}`, () => {
+        let deleteQuery = "DELETE FROM users where id = " + req.params.id;
+          db.query(deleteQuery, function (err, result) {
+            if (err) {res.status(400).json({ error : err.code });}
+            else {res.status(200).json({ message: 'Utilisateur supprimé !'});}
+        })
+      })
+    }
   })
 }

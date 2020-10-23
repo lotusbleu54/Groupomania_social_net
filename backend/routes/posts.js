@@ -13,9 +13,9 @@ const postsCtrl = require('../controllers/posts');
 router.post('/', auth, multerVideo , postsCtrl.createPost);
 router.get('/', auth, postsCtrl.getAllPosts);
 router.get('/:id', auth, postsCtrl.getOnePost);
+router.delete('/:id', auth, postsCtrl.deletePost);
+router.put('/:id', auth, multerVideo, postsCtrl.modifyPost);
 /*
-router.put('/:id', authsup, multer, postInputValidation, postsCtrl.modifyPost);
-router.delete('/:id', authsup, postsCtrl.deletePost);
 router.post('/:id/like', auth, postsCtrl.likePost);
 router.post('/:id/comment', auth, postsCtrl.commentPost);
 router.delete('/:id/comment', authsup, postsCtrl.deleteComment);

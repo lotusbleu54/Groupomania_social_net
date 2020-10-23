@@ -6,7 +6,7 @@ exports.createPost = (req, res, next) => {
   if (req.file) {
     const postObject = JSON.parse(req.body.post);
     const mediaUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
-    const postQuery = "INSERT INTO Posts VALUES (NULL,'" + postObject.userId + "','" + postObject.title + "','" + postObject.description + "','" + postObject.url + "','"+ mediaUrl + "', NOW())";
+    const postQuery = `INSERT INTO Posts VALUES (NULL,"${postObject.userId}","${postObject.title}","${postObject.description}","${mediaUrl}","${postObject.url}", NOW())`;
     db.query(postQuery, function (err, result) {
       if (!err) {
         res.status(201).json({ message: 'Post créé !' })
@@ -15,7 +15,7 @@ exports.createPost = (req, res, next) => {
       });
   }
   else {
-    const postQuery = "INSERT INTO Posts VALUES (NULL,'" + req.body.userId + "','" + req.body.title + "','" + req.body.description + "','" + req.body.url + "', NULL, NOW())";
+    const postQuery = `INSERT INTO Posts VALUES (NULL,"${req.body.userId}","${req.body.title}","${req.body.description}","","${req.body.url}", NOW())`;
     db.query(postQuery, function (err, result) {
       if (!err) {
         res.status(201).json({ message: 'Post créé !' })
@@ -27,7 +27,7 @@ exports.createPost = (req, res, next) => {
 
 //Fonction d'envoi au front de toutes les sauces (requête GET)
 exports.getAllPosts = (req, res, next) => {
-  let getAllQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.numero, TIMEDIFF(NOW(),Posts.date) as date FROM posts INNER JOIN user2 ON posts.user_id = user2.id ORDER BY `date` ASC";
+  let getAllQuery = "SELECT users.pseudo, users.avatar_url, posts.title, posts.media_url, posts.numero, TIMEDIFF(NOW(),posts.date) as date FROM posts INNER JOIN users ON posts.user_id = users.id ORDER BY `date` ASC";
   db.query(getAllQuery, function (err, result) {
     if (err) throw err;
     else {
@@ -45,14 +45,14 @@ exports.getAllPosts = (req, res, next) => {
         }
         res.status(200).json(Posts);
       }
-      else {res.status(401).json({ error: 'Pas de post trouvé !' });}
+      else {res.status(200).json([]);}
     }
   })
 }
 
 //Fonction d'envoi au front de l'objet sauce demandé (requête GET)
 exports.getOnePost = (req, res, next) => {
-  let getOneQuery = "SELECT user2.pseudo, user2.avatar_url, posts.title, posts.media_url, posts.numero, posts.link, posts.description, TIMEDIFF(NOW(),Posts.date) as date FROM posts INNER JOIN user2 ON posts.user_id = user2.id WHERE posts.numero = "+req.params.id;
+  let getOneQuery = `SELECT users.pseudo, users.avatar_url, posts.title, posts.media_url, posts.numero, posts.link, posts.description, TIMEDIFF(NOW(),Posts.date) as date FROM posts INNER JOIN users ON posts.user_id = users.id WHERE posts.numero =${req.params.id}`;
   db.query(getOneQuery, function (err, result) {
     if (err) throw err;
     else {
@@ -73,29 +73,60 @@ exports.getOnePost = (req, res, next) => {
   })
 }
 
+//Fonction d'envoi au front de l'objet sauce demandé (requête GET)
+exports.deletePost = (req, res, next) => {
+  let deletePostQuery = "DELETE FROM posts where numero = " + req.params.id;
+  db.query(deletePostQuery, function (err, result) {
+    if (err) res.status(400).json({error: err.message});
+    else res.status(200).json({message: 'Post supprimé !'});
+  })
+}
+
 //Fonction de modification de l'objet sauce (requête PUT)
-exports.modifySauce = (req, res, next) => {
-  if (req.file) { //Cas où l'image est modifiée
-    const sauceObject = { //Création d'un nouvel objet sauce avec les nouveaux champs et l'url de la nouvelle image
-      ...JSON.parse(req.body.sauce),
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    }
-    Sauce.findOne({ _id: req.params.id })
-    .then((sauce) => {
-      const filename = sauce.imageUrl.split('/images/')[1]; 
-      //On cherche à retrouver le nom du fichier image précédent pour le supprimer
-      fs.unlink(`images/${filename}`, () => { //Une fois l'image précédente supprimée, on met à jour la sauce dans la DB
-      Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-      .then(() => res.status(200).json({ message: 'Sauce modifiée !'}))
-      .catch(error => res.status(400).json({ error }));
-      })
+exports.modifyPost = (req, res, next) => {
+  if (req.file) {
+    const postObject = JSON.parse(req.body.post);
+    const infoMediaUrlQuery = "SELECT media_url FROM posts where numero = "+ req.params.id;
+    const mediaUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
+    db.query(infoMediaUrlQuery, function (err, result) {
+      if (err) {res.status(400).json({ error : err.code });}
+      else {
+        const oldMediaUrl = result[0].media_url.split('/medias/')[1];
+        const putQuery = `UPDATE Posts SET title = "${postObject.title}", description = "${postObject.description}", media_url = "${mediaUrl}", link = "${postObject.url}" where numero = ${req.params.id}`;
+        db.query(putQuery, function (err, result) {
+          if (!err) {
+            fs.unlink(`medias/${oldMediaUrl}`, () => {res.status(200).json({ message: 'Post modifié !'});})
+          }
+          else res.status(400).json({ error : err.code })     
+        });
+      }
     })
-    .catch(error => res.status(500).json({ error }));
   }
-  else { //Cas où l'image n'est pas modifiée
-    Sauce.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: 'Sauce modifiée !'}))
-    .catch(error => res.status(400).json({ error }));
+  else {
+    const putQuery = `UPDATE Posts SET title = "${req.body.title}", description = "${req.body.description}", media_url = "${req.body.mediaUrl}" , link = "${req.body.url}" where numero = ${req.params.id}`;
+    if (req.body.mediaUrl==false) {
+      const infoMediaUrlQuery = "SELECT media_url FROM posts where numero = "+ req.params.id;
+      db.query(infoMediaUrlQuery, function (err, result) {
+        if (err) {res.status(400).json({ error : err.code });}
+        else {
+          const oldMediaUrl = result[0].media_url.split('/medias/')[1];
+          fs.unlink(`medias/${oldMediaUrl}`, () => {
+            db.query(putQuery, function (err, result) {
+              if (!err) {res.status(200).json({ message: 'Post modifié !'})}
+              else res.status(400).json({ error : err.code })     
+            });
+          })
+        }
+      })
+    }
+    else {
+    db.query(putQuery, function (err, result) {
+      if (!err) {
+        res.status(200).json({ message: 'Post modifié !'})
+      }
+      else res.status(400).json({ error : err.code })     
+      });
+    }
   }
 }
 

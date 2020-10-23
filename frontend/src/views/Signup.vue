@@ -130,7 +130,6 @@ form > p {
 .image-preview {
   width:300px;
   min-height:100px;
-  border: 2px solid #dddddd;
   margin-top:15px;
 
   &__image {

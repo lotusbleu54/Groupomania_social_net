@@ -6,7 +6,7 @@
       </div>
       <div id="nav">
         <router-link to="/addpost" v-if="pseudo"> <i class="fas fa-plus-circle"></i> Créer un Post | &nbsp; </router-link>
-        <router-link to="/user" v-if="pseudo"> Mon profil | &nbsp;</router-link>
+        <router-link :to="'/user/'+id" v-if="pseudo"> Mon profil | &nbsp;</router-link>
         <button class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </button>
         <button class="disconnection" @click = "disconnection" v-else> Me connecter </button>
       </div>
@@ -44,6 +44,7 @@ export default {
         'Authorization': `Bearer ${this.token}`
       }
     };
+
     this.waiting = true;
     fetch("http://localhost:3000/api/posts", options)
       .then (res => {
@@ -51,6 +52,13 @@ export default {
           res.json ()
             .then (json => {
               const divToFill = document.getElementById('postsDiv');
+              //Cas où il n'y a aucun poste
+              if (json.length===0) {
+                let pEmpty = document.createElement("p");
+                pEmpty.textContent = "Désolé, il n'y a aucun post. Mais vous pouvez en créer un !";
+                divToFill.appendChild(pEmpty);
+                }
+              //Sinon, boucle sur tous les posts
               for (let i = 0; i < json.length; i++) {
                 let newDiv = document.createElement("div");
                 newDiv.className = "post";
@@ -88,7 +96,7 @@ export default {
                 newImage.alt = json[i].avatar;
                 newImage.width = 50;
                 newImage.height = 50;
-                avatarContainer.appendChild(newImage);
+                newDiv.appendChild(newImage);
 
                 const publishedOn = document.createElement("p");
                 const hoursSincePost = parseInt(json[i].date.substring(0,json[i].date.indexOf(':')));
@@ -148,9 +156,11 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     text-align: center;
     box-shadow: 5px 5px 10px grey; //effet d'ombre
     margin:30px auto;
+    padding:5px;
     width:60%;
     background-color: #C9E6EB;
     transform: scale(1);
@@ -164,8 +174,8 @@ export default {
 }
 
 img, video {
-max-width:80%;
-max-height:200px;
+max-width:90%;
+max-height:250px;
 }
 
 </style>
