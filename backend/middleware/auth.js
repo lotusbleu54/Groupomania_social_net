@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.TOKEN);
     const userId = decodedToken.userId;
     if (req.body.userId && req.body.userId !== userId) { //Vérification du token
-          throw 'Invalid user ID';
+      throw 'Invalid user ID';
     } 
     else {next();} //Si identification correcte, on autorise l'exécution du script suivant
   } 

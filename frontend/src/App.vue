@@ -24,20 +24,41 @@ export default {
 
 header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+  padding-top:10px;
 }
 
-#nav {
-  padding: 30px;
+ul {
+  list-style:none;
+}
 
-  a {
+#add, li {
+  margin:10px 0;
+  transform: scale(1);
+  transition: all 400ms;
+    &:hover {
+      transform: scale(1.1);
+      opacity: 0.6;
+      cursor:pointer;
+    }
+}
+
+a {
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+#nav a{
     font-weight: bold;
     color: #381302;
+    margin: 10px 20px;
 
     &.router-link-exact-active {
       color: #FD2A00;
     }
-  }
 }
 
 footer {
@@ -52,19 +73,6 @@ label {
 input {
   margin:10px;
   height:24px;
-}
-
-.disconnection {
-  margin:20px auto 0;
-  height:auto;
-  border:none;
-	padding:10px;
-	border-radius:8px;
-	background:#FD2A00;
-	font-weight:bold;
-  color:#fff;
-  font-size:14px;
-  cursor:pointer;
 }
 
 .loader {

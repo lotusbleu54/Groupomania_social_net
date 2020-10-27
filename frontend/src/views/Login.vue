@@ -4,10 +4,6 @@
       <div id="logo">
         <img alt="Vue logo" src="../assets/logo.png">
       </div>
-      <div id="nav">
-        <router-link to="/">Se connecter</router-link> |
-        <router-link to="/signup">Créer un compte</router-link>
-      </div>
     </header>
     <h1> Bienvenue sur le forum interne de Groupomania ! </h1>
     <h2> Veuillez entrer vos identifiants pour vous connecter </h2>

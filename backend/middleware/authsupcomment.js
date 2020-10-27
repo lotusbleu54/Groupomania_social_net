@@ -17,7 +17,7 @@ module.exports = (req, res, next) => {
       if (!err) {
         if (result[0].email ===process.env.DB_ADMIN_EMAIL) {next();}
         else {
-          const findUserIdQuery = `select user_id as userId from posts where numero = ${req.params.id}`;
+          const findUserIdQuery = `select user_id as userId from comments where numero = ${req.params.id}`;
           db.query(findUserIdQuery, function (err, result) {
             if (!err) {
               if ((req.body.userId && req.body.userId !== userId) || result[0].userId !== userId) {

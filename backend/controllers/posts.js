@@ -57,7 +57,7 @@ exports.getOnePost = (req, res, next) => {
     if (err) throw err;
     else {
       if(result.length > 0) {
-        res.status(200).json({
+        let postInfo = {
             pseudo: result[0].pseudo,
             avatar: result[0].avatar_url,
             title: result[0].title,
@@ -66,12 +66,59 @@ exports.getOnePost = (req, res, next) => {
             mediaUrl: result[0].media_url,
             numero: result[0].numero,
             date: result[0].date
-          })
-        }
+          };
+        let getLikesQuery = `SELECT users.pseudo as usersLike FROM users INNER JOIN likes ON likes.user_id = users.id WHERE likes.post_id =${req.params.id}`;
+        db.query(getLikesQuery, function (err, result) {
+          if (err) throw err;
+          else { let usersLike = [];
+            for (let i = 0; i < result.length; i++) {
+              usersLike.push(result[i].usersLike);
+              }
+            const usersLikeObject = {usersLike: usersLike};
+            postInfo = {...postInfo, ...usersLikeObject};
+            
+            let getDislikesQuery = `SELECT users.pseudo as usersDislike FROM users INNER JOIN dislikes ON dislikes.user_id = users.id WHERE dislikes.post_id =${req.params.id}`;
+            db.query(getDislikesQuery, function (err, result) {
+              if (err) throw err;
+              else { let usersDislike = [];
+                for (let i = 0; i < result.length; i++) {
+                  usersDislike.push(result[i].usersDislike);
+                  }
+                const usersDislikeObject = {usersDislike: usersDislike};
+                postInfo = {...postInfo, ...usersDislikeObject};
+                res.status(200).json(postInfo);}
+                })
+          }
+        })
+      }
+
       else {res.status(401).json({ error: 'Pas de post trouvé !' });}
     }
   })
 }
+
+//Fonction d'envoi au front de l'objet sauce demandé (requête GET)
+exports.getPostComments = (req, res, next) => {
+  let getCommentQuery = `SELECT users.pseudo, comments.numero, comments.comment FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.post_id =${req.params.id} ORDER BY comments.date DESC`;
+  db.query(getCommentQuery, function (err, result) {
+    if (err) throw err;
+    else {
+      if(result.length > 0) {
+        const Comments = [];
+        for (let i = 0; i < result.length; i++) {
+          Comments.push({
+            id: result[i].numero,
+            pseudo: result[i].pseudo,
+            comment: result[i].comment
+          })
+        }
+        res.status(200).json(Comments);
+      }
+      else {res.status(200).json([]);}
+    }
+  })
+}
+
 
 //Fonction d'envoi au front de l'objet sauce demandé (requête GET)
 exports.deletePost = (req, res, next) => {
@@ -81,6 +128,16 @@ exports.deletePost = (req, res, next) => {
     else res.status(200).json({message: 'Post supprimé !'});
   })
 }
+
+//Fonction d'envoi au front de l'objet sauce demandé (requête GET)
+exports.deleteComment = (req, res, next) => {
+  let deleteCommentQuery = "DELETE FROM comments where numero = " + req.params.id;
+  db.query(deleteCommentQuery, function (err, result) {
+    if (err) res.status(400).json({error: err.message});
+    else res.status(200).json({message: 'Commentaire supprimé !'});
+  })
+}
+
 
 //Fonction de modification de l'objet sauce (requête PUT)
 exports.modifyPost = (req, res, next) => {
@@ -130,60 +187,69 @@ exports.modifyPost = (req, res, next) => {
   }
 }
 
-//Fonction de suppression d'une sauce (requête DELETE)
-exports.deleteSauce = (req, res, next) => {
-  Sauce.findOne({ _id: req.params.id })
-  .then((sauce) => {
-    const filename = sauce.imageUrl.split('/images/')[1];
-    fs.unlink(`images/${filename}`, () => { //Suppression de l'image
-        Sauce.deleteOne({ _id: req.params.id }) //Effacement dans la DB
-          .then(() => res.status(200).json({ message: 'Sauce supprimée !'}))
-          .catch(error => res.status(400).json({ error }));
-      });
-    })
-  .catch(error => res.status(500).json({ error }));
+//Fonction d'ajout d'un nouveau commentaire (requête POST)
+exports.commentPost = (req, res, next) => {
+  const postCommentQuery = `INSERT INTO comments VALUES (NULL,"${req.body.userId}","${req.params.id}","${req.body.comment}", NOW())`;
+  db.query(postCommentQuery, function (err, result) {
+    if (!err) {
+      res.status(201).json({ message: 'Commentaire créé !' })
+    }
+    else throw err;     
+    });
 }
 
-//Traitement des requpetes portant sur les likes de sauces (requête POST)
-exports.likeSauce = (req, res, next) => {
-    Sauce.findOne({_id: req.params.id}) //Recherche de la sauce dans la DB
-    .then((sauce) => { //On récupère les likes et dislikes de la sauce avant mise à jour
-        var likes = sauce.likes;
-        var dislikes = sauce.dislikes;
-        var usersLiked = sauce.usersLiked;
-        var usersDisliked = sauce.usersDisliked;
-        //Cas où l'utilisateur like une sauce qu'il n'a pas déjà liké
-        if (req.body.like==1 && !(usersLiked.includes(req.body.userId))) {
-          likes+=1;
-          usersLiked.push(req.body.userId);
-        }
-        //Cas où l'utilisateur dislike une sauce qu'il n'a pas déjà disliké
-        else if (req.body.like==-1 && !(usersDisliked.includes(req.body.userId))) {
-          dislikes+=1;
-          usersDisliked.push(req.body.userId);
-        }
-        //Cas où l'utilisateur "dé-like" une sauce
-        else if (req.body.like == 0 && usersLiked.includes(req.body.userId)) {
-          likes-=1;
-          var index = usersLiked.indexOf(req.body.userId);
-              if (index > -1) {usersLiked.splice(index, 1);}
-        }
-        //Cas où l'utilisateur "dé-dislike" une sauce
-        else if (req.body.like == 0 && usersDisliked.includes(req.body.userId)) {
-          dislikes-=1;
-          var index = usersDisliked.indexOf(req.body.userId);
-              if (index > -1) {usersDisliked.splice(index, 1);}
-        }
-      //Mise à jour de la DB pour la partie like/dislike
-      Sauce.updateOne({ _id: req.params.id }, {
-        likes:likes,
-        dislikes:dislikes,
-        usersLiked:usersLiked,
-        usersDisliked:usersDisliked,
-        _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Like pris en compte'}))
-        .catch(error => res.status(400).json({ error }))
+//Traitement des requetes portant sur les likes (requête POST)
+exports.likePost = (req, res, next) => {
+  if (req.body.like==2) {
+    const eraseQuery = `delete from dislikes where post_id = ${req.params.id} and user_id = ${req.body.userId}`;
+    db.query(eraseQuery, function (err, result) {
+      if (!err) {
+        const likeQuery = `insert into likes values (${req.params.id},${req.body.userId})`;
+        db.query(likeQuery, function (err, result) {
+          if (!err) {
+            res.status(201).json({ message: 'Like pris en compte !' })
+          }
+          else throw err;     
+          });
+      }
+      else throw err;     
+      });
+    }
+
+  else if (req.body.like==1) {
+    const likeQuery = `delete from likes where user_id = ${req.body.userId} and post_id = ${req.params.id}`;
+    db.query(likeQuery, function (err, result) {
+      if (!err) {
+        res.status(201).json({ message: 'Like pris en compte !' })
+      }
+      else throw err;     
+      });
+    }
+  
+  else if (req.body.like==-1) {
+    const dislikeQuery = `delete from dislikes where user_id = ${req.body.userId} and post_id = ${req.params.id}`;
+    db.query(dislikeQuery, function (err, result) {
+      if (!err) {
+        res.status(201).json({ message: 'Like pris en compte !' })
+      }
+      else throw err;     
+      });
+    }
+  
+  else {
+    const eraseQuery = `delete from likes where post_id = ${req.params.id} and user_id = ${req.body.userId}`;
+    db.query(eraseQuery, function (err, result) {
+      if (!err) {
+        const dislikeQuery = `insert into dislikes values (${req.params.id},${req.body.userId})`;;
+        db.query(dislikeQuery, function (err, result) {
+          if (!err) {
+          res.status(201).json({ message: 'Like pris en compte !' })
+      }
+      else throw err;     
+      });
+    }
+    else throw err;
     })
-    .catch((error) => {res.status(404).json({error});});
+  }
 }
         

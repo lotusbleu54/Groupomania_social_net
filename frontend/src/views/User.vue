@@ -4,17 +4,18 @@
       <div id="logo">
         <img alt="Vue logo" src="../assets/logo.png">
       </div>
-      <div id="nav">
-        <router-link to="/posts" v-if="pseudo"> <i class="fas fa-arrow-circle-left"></i> Retourner aux posts | &nbsp; </router-link>
-        <button class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </button>
-        <button class="disconnection" @click = "disconnection" v-else> Me connecter </button>
-      </div>
+      <nav id="nav">
+        <ul>
+          <li><router-link to="/" href class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </router-link></li>
+        </ul>
+      </nav>
     </header>
     <h1 v-if="pseudo">Bonjour {{pseudo}}, voici les détails de votre profil</h1>
     <div id="profilDiv"></div>
 
-    <button class="modifyAvatar" v-if="id==urlId" @click="modifyUser"> Modifier mon avatar </button>
-    <button class="deleteAvatar" v-if="id==urlId" @click="deleteUser"> Supprimer mon compte </button>
+    <router-link to="/posts"> <button class = "button button__back"> <i class="fas fa-undo"></i> Retourner aux posts </button> </router-link>
+    <button class="button button__modify modifyAvatar" v-if="id==urlId" @click="modifyUser"> Modifier mon avatar </button>
+    <button class="button button__delete deleteAvatar" v-if="id==urlId" @click="deleteUser"> Supprimer mon compte </button>
     <div class="loader" v-show="waiting===true"></div>
     <p id="erreur" v-show="success===false"> Echec de la requête : {{message}} </p>
   </div>
@@ -41,8 +42,7 @@ export default {
 
     beforeMount() {
 
-        const currentUrl = window.location.href;
-        this.urlId = currentUrl.substr((currentUrl.lastIndexOf("/") + 1));
+        this.urlId = window.location.href.substr((window.location.href.lastIndexOf("/") + 1));
         const options = {
             method: 'GET',
             headers: {
@@ -73,10 +73,8 @@ export default {
                 })
             }
             else {res.json ()
-                .then (json => {
-                    this.waiting=false;
-                    this.success = false;
-                    this.message = json.error;
+                .then (() => {
+                    this.$router.push({ name: 'login' });
                 }
             )}
         })
@@ -150,7 +148,7 @@ export default {
             const newDiv2 = document.createElement("div");
             divToFill.appendChild(newDiv2);
             const newConfirmButton = document.createElement("button");
-            newConfirmButton.setAttribute("class","confirm");
+            newConfirmButton.classList.add("confirm", "button", "button__modify");
             newConfirmButton.textContent = "Confirmer la modification";
             newDiv2.appendChild(newConfirmButton);
 
@@ -168,7 +166,8 @@ export default {
                     const options = {
                         method: 'PUT',
                         body: formData,
-                        headers: {'Accept': 'application/json, text/plain, */*'}
+                        headers: {'Accept': 'application/json, text/plain, */*',
+                        'Authorization': `Bearer ${this.token}`}
                     };
                     fetch(`http://localhost:3000/api/auth/${this.urlId}`, options)
                         .then (res => {
@@ -194,7 +193,7 @@ export default {
             })
 
             const newCancelButton = document.createElement("button");
-            newCancelButton.setAttribute("class","cancel");
+            newCancelButton.classList.add("cancel", "button", "button__delete");
             newCancelButton.textContent = "Annuler la modification";
             newDiv2.appendChild(newCancelButton);
             newCancelButton.addEventListener('click', () => {

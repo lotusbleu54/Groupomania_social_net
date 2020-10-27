@@ -4,14 +4,15 @@
       <div id="logo">
         <img alt="Vue logo" src="../assets/logo.png">
       </div>
-      <div id="nav">
-        <router-link to="/posts" v-if="pseudo"> <i class="fas fa-arrow-circle-left"></i> Retourner aux posts</router-link> |
-        <router-link :to="'/user/'+id" v-if="pseudo">Mon profil</router-link> |
-        <button class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </button>
-        <button class="disconnection" @click = "disconnection" v-else> Me connecter </button>
-      </div>
+      <nav id="nav">
+        <ul>
+          <li @click = "displayMenu"><i class="fas fa-user-circle fa-3x"></i></li>
+          <li class = "invisible"><router-link :to="'/user/'+id" v-if="pseudo">Mon profil</router-link></li>
+          <li class = "invisible"><router-link to="/" href class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </router-link></li>
+        </ul>
+      </nav>
     </header>
-
+    <h1>Veuillez entrer les informations suivantes </h1>
     <form id="formElement" @submit="addPost">
       <label for="title">Titre <span class="required">*</span> </label>
       <input @input = "checkForm" type="text" id="title" name="title" minlength="8" maxlength= "49" required>
@@ -27,6 +28,8 @@
       </div>
       <input type="submit" id="addPost" value="Créer" disabled>
     </form>
+
+    <router-link to="/posts"> <button class = "button button__back"> <i class="fas fa-undo"></i> Retourner aux posts </button> </router-link>
 
     <div class="loader" v-show="waiting===true"></div>
     <p id="erreur" v-show="success===false"> Echec de la création de post : {{message}} </p>
@@ -52,7 +55,23 @@ export default {
     ...mapState(['id','pseudo', 'token'])
   },
 
+  mounted() {
+    if (this.pseudo==='') {this.$router.push({ name: 'login' });}
+    const menu = document.getElementsByClassName("invisible");
+      for (let i = 0; i < menu.length; i++) {
+        menu[i].setAttribute("style","display:none");
+      }
+  },
+
   methods: {
+
+    displayMenu() {
+      const menu = document.getElementsByClassName("invisible");
+      for (let i = 0; i < menu.length; i++) {
+        if (menu[i].style.display == "none") {menu[i].setAttribute("style","display:block");}
+        else {menu[i].setAttribute("style","display:none");}
+      }
+    },
 
     disconnection() {
       this.$store.commit('CONNECT_USER', ["","",""]);

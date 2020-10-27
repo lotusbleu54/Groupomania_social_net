@@ -1,15 +1,17 @@
 <template>
   <div class="AddPost">
     <header class="header">
-      <div id="logo">
-        <img alt="Vue logo" src="../assets/logo.png">
+      <div id="logo"><img alt="Vue logo" src="../assets/logo.png"></div>
+      <div id="add">
+        <router-link to="/addpost" v-if="pseudo"> <i class="far fa-plus-square fa-2x"></i> <br> Créer un Post </router-link>
       </div>
-      <div id="nav">
-        <router-link to="/addpost" v-if="pseudo"> <i class="fas fa-plus-circle"></i> Créer un Post | &nbsp; </router-link>
-        <router-link :to="'/user/'+id" v-if="pseudo"> Mon profil | &nbsp;</router-link>
-        <button class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </button>
-        <button class="disconnection" @click = "disconnection" v-else> Me connecter </button>
-      </div>
+      <nav id="nav">
+        <ul>
+          <li @click = "displayMenu"><i class="fas fa-user-circle fa-3x"></i></li>
+          <li class = "invisible"><router-link :to="'/user/'+id" v-if="pseudo">Mon profil</router-link></li>
+          <li class = "invisible"><router-link to="/" href class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </router-link></li>
+        </ul>
+      </nav>
     </header>
     <h1 v-if="pseudo">Bonjour {{pseudo}}, voici les derniers posts</h1>
     <div id="postsDiv"></div>
@@ -36,8 +38,12 @@ export default {
     ...mapState(['id','pseudo', 'token'])
   },
 
-  beforeMount() {
-
+  mounted() {
+    
+    const menu = document.getElementsByClassName("invisible");
+      for (let i = 0; i < menu.length; i++) {
+        menu[i].setAttribute("style","display:none");
+      }
     const options = {
       method: 'GET',
       headers: {
@@ -127,10 +133,8 @@ export default {
               }
             )}
             else {res.json ()
-              .then (json => {
-              this.waiting=false;
-              this.success = false;
-              this.message = json.error;
+              .then (() => {
+              this.$router.push({ name: 'login' });
               }
             )}
           })
@@ -143,6 +147,15 @@ export default {
   },
 
   methods: {
+
+    displayMenu() {
+      const menu = document.getElementsByClassName("invisible");
+        for (let i = 0; i < menu.length; i++) {
+          if (menu[i].style.display == "none") {menu[i].setAttribute("style","display:block");}
+          else {menu[i].setAttribute("style","display:none");}
+        }
+    },
+
     disconnection() {
       this.$store.commit('CONNECT_USER', ["","",""]);
       this.$router.push({ name: 'login' });

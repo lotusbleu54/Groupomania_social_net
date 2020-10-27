@@ -15,23 +15,10 @@ module.exports = (req, res, next) => {
     const findUserEmailQuery = `select email from users where id = ${userId}`;
     db.query(findUserEmailQuery, function (err, result) {
       if (!err) {
-        if (result[0].email ===process.env.DB_ADMIN_EMAIL) {next();}
-        else {
-          const findUserIdQuery = `select user_id as userId from posts where numero = ${req.params.id}`;
-          db.query(findUserIdQuery, function (err, result) {
-            if (!err) {
-              if ((req.body.userId && req.body.userId !== userId) || result[0].userId !== userId) {
-                res.status(401).json({error: 'Requête non authorisée'});
-              }
-              else {next();}
-            }
-            else throw err; 
-          })
-        }
-      }
-      else {
-        throw err;
-      }
+        if (result[0].email === process.env.DB_ADMIN_EMAIL || req.params.id == userId) {next();}
+        else throw err;
+        } 
+    else throw err;
     })
   }
   catch {res.status(401).json({error: 'Requête non authorisée'})}  
