@@ -5,7 +5,7 @@ const db = require('../db');
 require('dotenv').config();
 
 /*Même fonction que auth sauf qu'ici on cherche à savoir si l'utilisateur est l'administrateur 
-ou la personne qui a créé la sauce qu'on cherche à modifier ou supprimer*/
+ou la personne qui cherche à voir, modifier ou supprimer son compte */
 
 module.exports = (req, res, next) => {
   try {

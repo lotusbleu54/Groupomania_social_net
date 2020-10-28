@@ -7,9 +7,10 @@ const auth = require('../middleware/auth');
 const authsup = require('../middleware/authsup');
 //Import du middleware authsupcomment pour n'autoriser que l'admin ou l'utilisateur qui a créé le commentaire à le supprimer
 const authsupcomment = require('../middleware/authsupcomment');
-//Import du middleware multer pour la gestion des images
+//Import du middleware multer pour la gestion des images et vidéos
 const multerVideo = require('../middleware/multer-config-video');
 
+//Controlleur des routes définies plus bas
 const postsCtrl = require('../controllers/posts');
 
 router.post('/', auth, multerVideo , postsCtrl.createPost);

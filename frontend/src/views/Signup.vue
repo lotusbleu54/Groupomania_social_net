@@ -7,6 +7,8 @@
     </header>
     <h1> Bienvenue sur le forum interne de Groupomania ! </h1>
     <h2> Veuillez entrer les informations suivantes pour créer un compte </h2>
+
+    <!--Formulaire de création de compte-->
     <form id="formElement" @submit = "sendForm">
       <label for="mail">Adresse e-mail <span class="required">*</span> </label>
       <input @input = "checkForm" type="email" id="mail" name="email" required>
@@ -20,6 +22,7 @@
       <div class="image-preview" v-if="imageLoaded===true">
         <img src="" alt="aperçu de l'avatar" class="image-preview__image"> 
       </div>
+      <div class="required"> * Champs requis </div>
       <input type="submit" id="userSignup" value="Enregistrer" disabled>
     </form>
     <div class="loader" v-show="waiting===true"></div>
@@ -36,13 +39,16 @@ export default {
   name: 'Signup',
   data: function() {
     return {
-    imageLoaded: false,
-    success: true,
-    waiting: false,
-    message :""
+    imageLoaded: false, //Affichage de l'avatar s'il est chargé
+    success: true, //affichage d'un message d'erreur si passe à false
+    waiting: false, //spinner affiché si variable passe à true
+    message :"", //message d'erreur
     }
   },
+
   methods: {
+
+    //Vérification en direct de la validité du formulaire. Le bouton "Envoyer" n'est clickable que si tous les champs sont OK
     checkForm() {
       if (document.getElementById("mail").checkValidity() 
       && document.getElementById("pass").checkValidity() 
@@ -53,6 +59,7 @@ export default {
       else document.getElementById("userSignup").disabled = true;
     },
 
+    //Fonction de prévisualisation de l'avatar
     loadImagePreview() {
       const fileUploaded = document.getElementById("avatar").files[0];
       if (fileUploaded) {
@@ -66,49 +73,55 @@ export default {
       else {this.imageLoaded=false;}
     },
 
+    //Fonction appelée lors de la soumission du formulaire
     sendForm(event) {
-      event.preventDefault();
+      event.preventDefault(); //On gère nous-mêmes l'appel backend
+
       const email= document.getElementById("mail").value;
       const password = document.getElementById("pass").value;
       const pseudo = document.getElementById("pseudo").value;
       const user = { "email": email, "password": password, "pseudo": pseudo };
       const fileToSend = event.target.avatar.files[0];
+
+      //Si l'avatar fait plus de 1Mb, on le bloque avant envoi à l'API
       if (fileToSend.size > 1*1000*1000) {
         this.waiting=false;
         this.success = false;
         this.message = "La taille maximale du fichier doit être de 1Mb";
       }
+
+      //Envoi de l'image sous forme de fichier et des autres infos sous format JSON
       else {
-      let formData = new FormData();
-      formData.append('user', JSON.stringify(user));
-      formData.append('image', fileToSend);
-      this.waiting = true;
-      const options = {
-        method: 'POST',
-        body: formData,
-        headers: {'Accept': 'application/json, text/plain, */*'}
-      };
-      fetch("http://localhost:3000/api/auth/signup", options)
-        .then (res => {
-          if (res.status == 201) {
-            this.success=true;
-            this.waiting=false;
-            this.$router.push({ name: 'login' });
-          }
-          else {res.json ()
-          .then (json => {
-            this.waiting=false;
-            this.success = false;
-            this.message = json.error;
+        let formData = new FormData();
+        formData.append('user', JSON.stringify(user));
+        formData.append('image', fileToSend);
+        this.waiting = true;
+        const options = {
+          method: 'POST',
+          body: formData,
+          headers: {'Accept': 'application/json, text/plain, */*'}
+        };
+        fetch("http://localhost:3000/api/auth/signup", options)
+          .then (res => {
+            if (res.status == 201) {
+              this.success=true;
+              this.waiting=false;
+              this.$router.push({ name: 'login' });
             }
-          )}
-        })
-        .catch (() => {
-          this.waiting=false;
-          this.success= false;
-          this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
-        })
-    }
+            else {res.json ()
+              .then (json => {
+                this.waiting=false;
+                this.success = false;
+                this.message = json.error;
+              }
+            )}
+          })
+          .catch (() => {
+            this.waiting=false;
+            this.success= false;
+            this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
+          })
+      }
     }
   }
 }

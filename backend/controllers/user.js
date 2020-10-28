@@ -11,16 +11,17 @@ const { json } = require('body-parser');
 
 exports.apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // Fenêtre de 5 minutes
-    max: 10, //3 tentatives de connections max depuis cette IP
+    max: 3, //3 tentatives de connections max depuis cette IP
     message: {error: "Trop de tentatives de connection depuis cette IP, veuillez réessayer ultérieurement"}
   });
 
 exports.createAccountLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // Fenêtre d'1 heure
-    max: 20, // 2 comptes créés max depuis cette IP
+    max: 2, // 2 comptes créés max depuis cette IP
     message: {error : "Trop de tentatives de créations de compte depuis cette IP, veuillez réessayer ultérieurement"}
   });
 
+// Récupère les infos du formulaire, enregistre l'url de l'avatar, vérifie que l'utilisateur n'existe pas déjà, teste la sécurité du mot de passe
 exports.signup = (req, res, next) => {
     const userObject = JSON.parse(req.body.user);
     const imageUrl = `${req.protocol}://${req.get('host')}/medias/${req.file.filename}`;
@@ -46,6 +47,7 @@ exports.signup = (req, res, next) => {
     }
 }
 
+//Vérifie que l'utilisateur existe et que le mdp est correct puis renvoie un token de connection avec l'id et le pseudo
 exports.login = (req, res, next) => {
   let loginQuery = "SELECT * FROM users where email = '" + req.body.email + "'";
   db.query(loginQuery, function (err, result) {
@@ -55,7 +57,7 @@ exports.login = (req, res, next) => {
         bcrypt.compare(req.body.password, result[0].password)
         .then((valid) => {
           if (!valid) {return res.status(401).json({ error: 'Mot de passe incorrect !' });}
-          else {res.status(200).json({ //Retourne le User Id et le Token
+          else {res.status(200).json({ //Retourne le User Id, le pseudo et le Token
               id: result[0].id,
               pseudo: result[0].pseudo,
               token: jwt.sign({ userId: result[0].id },process.env.TOKEN,{ expiresIn: '24h' })
@@ -68,8 +70,9 @@ exports.login = (req, res, next) => {
 });
 }
 
+//Permet de récupérer les infos de l'utilisateur (avatar et email)
 exports.getUserInfo = (req, res, next) => {
-  let getUserInfoQuery = `SELECT email, avatar_url FROM users where id = ${req.params.id}`;
+  let getUserInfoQuery = 'SELECT email, avatar_url FROM users where id = '+ db.escape(req.params.id);
   db.query(getUserInfoQuery, function (err, result) {
     if (err) throw err;
     else {

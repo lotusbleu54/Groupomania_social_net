@@ -1,6 +1,7 @@
 const multer = require('multer');
 const { nextTick } = require('process');
 
+//Formats d'image acceptés
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',
@@ -22,6 +23,7 @@ const storage = multer.diskStorage({
   }
 });
 
+//Permet de renvoyer un message d'erreur si pas bon format
 const fileFilter = function (req, file, callback) {
   if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
     return callback(new Error('Seules les images de type jpg ou png sont autorisées.'), false);
@@ -32,24 +34,7 @@ callback(null, true);
 module.exports = (req, res, next) => {
     const upload = multer({storage: storage, limits: maxSize, fileFilter: fileFilter}).single('image');
     upload(req, res, function (err) {
-      if (err) {
-      // A Multer error occurred when uploading.
-      console.log(err.message);
-      res.status(403).json({error: err.message});
-      }
+      if (err) {res.status(403).json({error: err.message});}
       else {next();}
     })
   }
-/*
-module.exports = multer({
-  storage: storage,
-  limits: { fileSize: maxSize }, //Limite de la taille du fichier ajoutée ici
-  fileFilter: (req, file, callback) => {// Ne permet que l'ajout d'images de type jp(e)g ou png
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-        return callback(new Error('Only jpg or png images are allowed.'), false);
-    }
-    callback(null, true);
-  }
-})
-.single('image'); //N'accepte qu'un seul fichier à la fois
-*/

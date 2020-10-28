@@ -3,6 +3,7 @@ const mysql = require('mysql');
 //Données DB cachées
 require('dotenv').config();
 
+//Infos de connexion à la DB
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -10,6 +11,7 @@ const connection = mysql.createConnection({
     database: 'groupomania'
 });
 
+//Affiche "Connected à la console si la connexion réussit"
 connection.connect(function(err) {
     if (err) throw err;
     console.log("Connected!");

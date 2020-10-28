@@ -51,13 +51,13 @@ a {
   }
 }
 
-#nav a{
+#nav li{
     font-weight: bold;
     color: #381302;
     margin: 10px 20px;
 
-    &.router-link-exact-active {
-      color: #FD2A00;
+    &:hover  {
+      text-decoration: underline;
     }
 }
 

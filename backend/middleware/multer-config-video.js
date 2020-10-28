@@ -1,6 +1,9 @@
+//Même fonction que multer-config, mais permet aussi d'insérer des vidéos ou des images de type gif
+
 const multer = require('multer');
 const { nextTick } = require('process');
 
+//Types acceptés
 const MIME_TYPES = {
   'image/jpg': 'jpg',
   'image/jpeg': 'jpg',
@@ -34,10 +37,7 @@ callback(null, true);
 module.exports = (req, res, next) => {
     const upload = multer({storage: storage, limits: maxSize, fileFilter: fileFilter}).single('media');
     upload(req, res, function (err) {
-      if (err) {
-      // A Multer error occurred when uploading.
-      res.status(403).json({error: err.message});
-      }
+      if (err) {res.status(403).json({error: err.message});}
       else {next();}
     })
   }

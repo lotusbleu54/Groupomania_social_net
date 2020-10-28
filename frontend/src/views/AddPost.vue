@@ -7,12 +7,14 @@
       <nav id="nav">
         <ul>
           <li @click = "displayMenu"><i class="fas fa-user-circle fa-3x"></i></li>
-          <li class = "invisible"><router-link :to="'/user/'+id" v-if="pseudo">Mon profil</router-link></li>
-          <li class = "invisible"><router-link to="/" href class="disconnection" @click = "disconnection" v-if="pseudo"> Déconnexion </router-link></li>
+          <li class = "invisible"><router-link :to="'/user/'+id">Mon profil</router-link></li>
+          <li class = "invisible disconnection" @click = "disconnection"> Déconnexion </li>
         </ul>
       </nav>
     </header>
     <h1>Veuillez entrer les informations suivantes </h1>
+
+    <!--Formulaire de création de post-->
     <form id="formElement" @submit="addPost">
       <label for="title">Titre <span class="required">*</span> </label>
       <input @input = "checkForm" type="text" id="title" name="title" minlength="8" maxlength= "49" required>
@@ -26,6 +28,7 @@
         <img src="" alt="aperçu de l'image" class="media-preview__image" v-if="imageLoaded===true">
         <video controls src="" class="media-preview__video" v-if="videoLoaded===true">Aperçu de la vidéo</video>
       </div>
+      <div class="required"> * Champs requis </div>
       <input type="submit" id="addPost" value="Créer" disabled>
     </form>
 
@@ -38,33 +41,38 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 
 export default {
   data: function() {
     return {
-    imageLoaded: false,
-    videoLoaded: false,
-    success: true,
-    waiting: false,
-    message :""
+    imageLoaded: false, //Permet d'afficher l'image chargée si true
+    videoLoaded: false, //Permet d'afficher la vidéo chargée si true
+    success: true, //affichage d'un message d'erreur si passe à false
+    waiting: false, //spinner affiché si variable passe à true
+    message :"", //message d'erreur
+    id:"", //id de l'utilisateur connecté
+    token:"" //token de connection
     }
   },
 
-  computed: {
-    ...mapState(['id','pseudo', 'token'])
-  },
-
+  //Chargement automatique dès que le js est monté
   mounted() {
-    if (this.pseudo==='') {this.$router.push({ name: 'login' });}
-    const menu = document.getElementsByClassName("invisible");
-      for (let i = 0; i < menu.length; i++) {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo')); //on récupère les infos de connection
+    if (userInfo) { //On vérifie si l'utilisateur s'est connecté, sinon on le renvoie vers la page login
+      this.id = userInfo.id;
+      this.token = userInfo.token;
+      //On cache les menus "Mon profil" et "Déconnection" tant que l'utilisateur ne clique pas sur l'icône
+      const menu = document.getElementsByClassName("invisible");
+        for (let i = 0; i < menu.length; i++) {
         menu[i].setAttribute("style","display:none");
       }
+    }
+    else {this.$router.push({ name: 'login' });}
   },
 
   methods: {
 
+    //Affiche les menus "Mon Profil" et "Déconnection" ou les cache si déjà affichés
     displayMenu() {
       const menu = document.getElementsByClassName("invisible");
       for (let i = 0; i < menu.length; i++) {
@@ -73,11 +81,13 @@ export default {
       }
     },
 
+    //Effacement des données de connection et redirection vers la page login
     disconnection() {
-      this.$store.commit('CONNECT_USER', ["","",""]);
+      localStorage.clear();
       this.$router.push({ name: 'login' });
     },
 
+    //Vérification en direct de la validité du formulaire. Le bouton "Envoyer" n'est clickable que si tous les champs sont OK
     checkForm() {
       if (document.getElementById("title").checkValidity() 
       && document.getElementById("description").checkValidity() 
@@ -88,10 +98,13 @@ export default {
       else {document.getElementById("addPost").disabled = true;}
     },
 
+    //Fonction de prévisualisation du média
     loadImagePreview() {
       const fileUploaded = document.getElementById("media").files[0];
       const regexImage = RegExp('image*');
       const regexVideo = RegExp('video*');
+
+      //Cas de l'image
       if (fileUploaded && regexImage.test(fileUploaded.type)) {
         const reader = new FileReader();
         this.imageLoaded = true;
@@ -101,6 +114,8 @@ export default {
         });
         reader.readAsDataURL(fileUploaded);
       }
+
+      //Cas de la vidéo
       else if (fileUploaded && regexVideo.test(fileUploaded.type)) {
         const reader = new FileReader();
         this.videoLoaded = true;
@@ -110,20 +125,26 @@ export default {
         });
         reader.readAsDataURL(fileUploaded);
       }
+
+      //Cas où aucun média n'est chargé
       else {
         this.imageLoaded=false;
         this.videoLoaded=false;
       }
     },
 
+    //Fonction appelée lors de la soumission du formulaire
     addPost(event) {
-      event.preventDefault();
+      event.preventDefault(); //On gère nous-mêmes l'appel backend
+
+      //On récupère toutes les infos du formulaire
       const title= document.getElementById("title").value;
       const description = document.getElementById("description").value;
       const url = document.getElementById("link").value;
       const post = {"userId": this.id, "title": title, "description": description, "url": url };
       const fileToSend = event.target.media.files[0];
       
+      //Cas où il n'y a pas de média : on envoie les autres données en objet JSON
       if (!fileToSend) {
         const options = {
           method: 'POST',
@@ -135,67 +156,68 @@ export default {
         };
         fetch("http://localhost:3000/api/posts", options)
           .then (res => {
-            if (res.status == 201) {
-              res.json ()
+            if (res.status == 201) {res.json ()
               .then (() => {
                 this.success=true;
                 this.waiting=false;
-                this.$router.push({ name: 'posts' });
+                this.$router.push({ name: 'posts' }); //En cas de succès, on est renvoyé sur la page des posts
               }
             )}
             else {res.json ()
-              .then (json => {
-              this.waiting=false;
-              this.success = false;
-              this.message = json.error;
+            .then (json => {
+                this.waiting=false;
+                this.success = false;
+                this.message = json.error; //Affichage du message d'erreur du serveur
               }
             )}
           })
-          .catch (() => {
+          .catch (() => { //Cas où le serveur ne répond pas
             this.waiting=false;
             this.success= false;
             this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
           })
       }
       
+      //Si la taille du fichier est > 20Mb, on n'envoie même pas la requête au serveur
       else if (fileToSend.size > 20*1000*1000) {
         this.waiting=false;
         this.success = false;
         this.message = "La taille maximale du fichier doit être de 20Mb";
       }
 
+      //Cas où il y a un fichier dans la demande. La requête comprendra un fichier et un objet JSON
       else {
-      let formData = new FormData();
-      formData.append('post', JSON.stringify(post));
-      formData.append('media', fileToSend);
-      this.waiting = true;
-      const options = {
+        let formData = new FormData();
+        formData.append('post', JSON.stringify(post));
+        formData.append('media', fileToSend);
+        this.waiting = true;
+        const options = {
         method: 'POST',
         body: formData,
         headers: {
           'Accept': 'application/json, text/plain, */*',
           'Authorization': `Bearer ${this.token}`
-        }
-      };
-      fetch("http://localhost:3000/api/posts", options)
-        .then (res => {
+          }
+        };
+        fetch("http://localhost:3000/api/posts", options)
+          .then (res => {
           if (res.status == 201) {
             this.success=true;
             this.waiting=false;
-            this.$router.push({ name: 'posts' });
+            this.$router.push({ name: 'posts' }); //En cas de succès, on est renvoyé sur la page des posts
           }
           else {res.json ()
           .then (json => {
             this.waiting=false;
             this.success = false;
-            this.message = json.error;
+            this.message = json.error; //Affichage du message d'erreur du serveur
             }
           )}
         })
-        .catch (() => {
+        .catch (() => { //Cas où le serveur ne répond pas
           this.waiting=false;
           this.success= false;
-          this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement";
+          this.message = "Désolé, le serveur ne répond pas ! Veuillez réessayer ultérieurement"; 
         })
       }
     }

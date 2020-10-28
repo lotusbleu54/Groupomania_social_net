@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 //Token caché
 require('dotenv').config();
 
+//Vérifie que le token esst le bon
 module.exports = (req, res, next) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
