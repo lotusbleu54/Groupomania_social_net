@@ -122,7 +122,7 @@ export default {
                         .then (() => {
                             this.waiting=false;
                             alert("Le compte a bien été supprimé");
-                            this.$store.commit('CONNECT_USER', ["","",""]);
+                            localStorage.clear();
                             this.$router.push({ name: 'signup' });
                         })
                     }

@@ -498,7 +498,7 @@ export default {
                                                             newP.remove();
                                                             //On met aussi à jour le nombre total de commentaires
                                                             this.numberOfComments--;
-                                                            document.getElementById("numberOfComments").textContent = this.numberOfComments + " commentaires";
+                                                            this.getAllComments();
                                                         })
                                                     }
                                                     else {res.json ()
