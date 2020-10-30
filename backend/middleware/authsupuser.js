@@ -16,10 +16,10 @@ module.exports = (req, res, next) => {
     db.query(findUserEmailQuery, function (err, result) {
       if (!err) {
         if (result[0].email === process.env.DB_ADMIN_EMAIL || req.params.id == userId) {next();}
-        else throw err;
+        else res.status(401).json({error: 'Requête non authorisée'});
         } 
-    else throw err;
+    else res.status(400).json({error: 'Mauvaise requête'});
     })
   }
-  catch {res.status(401).json({error: 'Requête non authorisée'})}  
+  catch {res.status(400).json({error: 'Mauvaise requête'});}  
 };

@@ -11,13 +11,13 @@ const { json } = require('body-parser');
 
 exports.apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // Fenêtre de 5 minutes
-    max: 3, //3 tentatives de connections max depuis cette IP
+    max: 10, //3 tentatives de connections max depuis cette IP
     message: {error: "Trop de tentatives de connection depuis cette IP, veuillez réessayer ultérieurement"}
   });
 
 exports.createAccountLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // Fenêtre d'1 heure
-    max: 2, // 2 comptes créés max depuis cette IP
+    max: 20, // 2 comptes créés max depuis cette IP
     message: {error : "Trop de tentatives de créations de compte depuis cette IP, veuillez réessayer ultérieurement"}
   });
 

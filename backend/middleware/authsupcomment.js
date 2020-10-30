@@ -25,12 +25,12 @@ module.exports = (req, res, next) => {
               }
               else {next();}
             }
-            else throw err; 
+            else res.status(400).json({error: 'Mauvaise requête'}); 
           })
         }
       }
       else {
-        throw err;
+        res.status(400).json({error: 'Mauvaise requête'});
       }
     })
   }

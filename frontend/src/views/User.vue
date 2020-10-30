@@ -10,7 +10,7 @@
         </ul>
       </nav>
     </header>
-    <h1 v-if="pseudo">Bonjour {{pseudo}}, voici les détails de votre profil</h1>
+    <h1 v-if="pseudo">Bonjour {{pseudo}}, voici les détails du profil</h1>
     <div id="profilDiv"></div>
 
     <router-link to="/posts"> <button class = "button button__back"> <i class="fas fa-undo"></i> Retourner aux posts </button> </router-link>
@@ -32,12 +32,13 @@ export default {
             id: "", //id de l'utilisateur connecté
             token: "", //token de connection
             pseudo:"", //pseudo de l'utilisateur connecté
+            urlId:""
         }
     },
 
     //Chargement automatique dès que le js est monté
     mounted() {
-
+        this.urlId=window.location.href.substr((window.location.href.lastIndexOf("/") + 1));
         const userInfo = JSON.parse(localStorage.getItem('userInfo')); //on récupère les infos de connection
         if (userInfo) { //On vérifie si l'utilisateur s'est connecté, sinon on le renvoie vers la page login
             this.id = userInfo.id;
@@ -63,7 +64,7 @@ export default {
             };
             this.waiting = true;
 
-            fetch(`http://localhost:3000/api/auth/${this.id}`, options)
+            fetch(`http://localhost:3000/api/auth/${this.urlId}`, options)
             .then (res => {
             if (res.status == 200) {res.json ()
                 .then (json => {
@@ -171,14 +172,14 @@ export default {
         newConfirmButton.addEventListener('click', () => {
         const fileToSend = document.getElementById("avatar").files[0];
             //Pas d'envoi si image > 1Mb
-            if (fileToSend.size > 1*1000*1000) {
+            if (fileToSend && fileToSend.size > 1*1000*1000) {
                 this.waiting=false;
                 this.success = false;
                 this.message = "La taille maximale du fichier doit être de 1Mb";
             }
 
             //méthode put avec le nouvel avatar
-            else {
+            else if (fileToSend) {
                 let formData = new FormData();
                 formData.append('image', fileToSend);
                 this.waiting = true;

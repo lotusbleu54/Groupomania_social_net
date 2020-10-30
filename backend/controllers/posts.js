@@ -99,7 +99,7 @@ exports.getOnePost = (req, res, next) => {
 
 //Fonction d'envoi au front de tous les commentaires associés au post (requête GET)
 exports.getPostComments = (req, res, next) => {
-  let getCommentQuery = `SELECT users.pseudo, comments.numero, comments.comment FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.post_id =${req.params.id} ORDER BY comments.date DESC`;
+  let getCommentQuery = `SELECT users.pseudo, users.avatar_url, comments.numero, comments.comment FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.post_id =${req.params.id} ORDER BY comments.date DESC`;
   db.query(getCommentQuery, function (err, result) {
     if (err) throw err;
     else {
@@ -108,6 +108,7 @@ exports.getPostComments = (req, res, next) => {
         for (let i = 0; i < result.length; i++) {
           Comments.push({
             id: result[i].numero,
+            avatar_url: result[i].avatar_url,
             pseudo: result[i].pseudo,
             comment: result[i].comment
           })

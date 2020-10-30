@@ -466,8 +466,8 @@ export default {
                                 for (let i = 0; i < json.length; i++) {
                                     const newP = document.createElement("p");
                                     const newSpan = document.createElement("span");
-                                    //Affiche le pseudo de celui qui a fait le commentaire + le commentaire
-                                    newSpan.textContent = json[i].pseudo + " : " + json[i].comment;
+                                    //Affiche le pseudo de celui qui a fait le commentaire avec son avatar et le commentaire
+                                    newSpan.innerHTML = `${json[i].pseudo} <img src='${json[i].avatar_url}' width='20' height='20' alt='avatar de ${json[i].pseudo}'> : ${json[i].comment}`;
                                     newP.appendChild(newSpan);
                                     divToFill.appendChild(newP);
 
@@ -663,6 +663,7 @@ section {
 }
 
 .allComments > p {
+    font-size:18px;
     margin:15px;
     word-wrap: break-word;
 }
