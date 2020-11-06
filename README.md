@@ -13,6 +13,7 @@ Pour la partie MySQL :
 4) Entrer les commandes suivantes à l'aide des infos DB_USER, DB_HOST, DB_PASS et DB_NAME fournies dans le fichier P7_02_Environnement :
 
     CREATE USER 'DB_USER'@'DB_HOST' IDENTIFIED BY 'DB_PASS';
+    
     GRANT ALL PRIVILEGES ON DB_NAME.* TO 'DB_USER'@'DB_HOST';
 5) Se connecter à MySQL avec l'utilisateur DB_USER et le mot de passe DB_PASS, puis entrer la commande suivante :
 
