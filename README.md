@@ -11,11 +11,14 @@ Pour la partie MySQL :
 2) A l'aide du fichier fourni P7_02_Environnement => créer un fichier ".env" dans le dossier backend
 3) Se connecter à MySQL avec l'utilisateur root
 4) Entrer les commandes suivantes à l'aide des infos DB_USER, DB_HOST, DB_PASS et DB_NAME fournies dans le fichier P7_02_Environnement :
+
     CREATE USER 'DB_USER'@'DB_HOST' IDENTIFIED BY 'DB_PASS';
     GRANT ALL PRIVILEGES ON DB_NAME.* TO 'DB_USER'@'DB_HOST';
 5) Se connecter à MySQL avec l'utilisateur DB_USER et le mot de passe DB_PASS, puis entrer la commande suivante :
+
     CREATE DATABASE DB_NAME
 6) Utiliser la sauvegarde de la base (dans le dossier backend > groupomania_sauvegarde.sql) avec la commande suivante : 
+
     mysql DB_NAME < chemin_fichier_de_sauvegarde.sql
 
 Pour la partie backend (node js):
