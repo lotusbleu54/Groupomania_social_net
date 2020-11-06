@@ -2,7 +2,7 @@
 
 Projet 7 formation développeur web - Groupomania
 
-Pour installer le projet en local :
+Pour installer le projet en local (prérequis - avoir node.js et git installés) :
 
 1) Cloner ce répertoire => git clone https://github.com/lotusbleu54/OC_Projet7.git
 
