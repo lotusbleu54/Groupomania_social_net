@@ -20,7 +20,7 @@ Pour la partie MySQL :
     CREATE DATABASE DB_NAME
 6) Utiliser la sauvegarde de la base (dans le dossier backend > groupomania_sauvegarde.sql) avec la commande suivante : 
 
-    USE DB_NAME SOURCE chemin_fichier_de_sauvegarde.sql
+    USE DB_NAME SOURCE chemin_vers_fichier_groupomania_sauvegarde.sql
 
 Pour la partie backend (node js):
 
