@@ -7,6 +7,7 @@ Pour installer le projet en local (prérequis - avoir node.js, git et MySQL inst
 1) Cloner ce répertoire => git clone https://github.com/lotusbleu54/OC_Projet7.git
 
 Pour la partie MySQL :
+
 2) A l'aide du fichier fourni P7_02_Environnement => créer un fichier ".env" dans le dossier backend
 3) Se connecter à MySQL avec l'utilisateur root
 4) Entrer les commandes suivantes à l'aide des infos DB_USER, DB_HOST, DB_PASS et DB_NAME fournies dans le fichier P7_02_Environnement :
