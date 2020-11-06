@@ -147,7 +147,7 @@ form > p {
 }
 
 .required {
-  color:red;
+  color:#AD0000;
 }
 input[type="file"] {
     display: none;

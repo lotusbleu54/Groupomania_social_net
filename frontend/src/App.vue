@@ -91,7 +91,7 @@ input {
 }
 
 #erreur {
-  color:red;
+  color:#AD0000;
   font-weight: bold;
 }
 

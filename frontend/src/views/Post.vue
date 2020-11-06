@@ -713,7 +713,7 @@ p span {
         background-color: #673ab7;
     }
     &__delete {
-        background-color: red;
+        background-color: #AD0000;
     }
     &__send {
         background-color: #FD2A00;
