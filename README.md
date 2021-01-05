@@ -1,10 +1,13 @@
-﻿# OC_Projet7
+﻿# Groupomania_social_net
 
-Projet 7 formation développeur web - Groupomania
+Site web présentant un réseau social d'entreprise (Projet 7 formation développeur web Openclassrooms).
+
+Compétences mises en avant : framework Vue.js pour la partie front, Node.js et Express pour la partie backend avec base de données MySQL.
+
 
 Pour installer le projet en local (prérequis - avoir node.js, git et MySQL installés) :
 
-1) Cloner ce répertoire => git clone https://github.com/lotusbleu54/OC_Projet7.git
+1) Cloner ce répertoire => git clone https://github.com/lotusbleu54/Groupomania_social_net.git
 
 Pour la partie MySQL :
 
